@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import json
 
+WRITER_LIMIT = 2500
+
+def extract_id(obj):
+    return "\"id\" == " + "'" + obj["id"] + "'"
 
 def list_constraint(full_constraint, constraint_name):
     result = []
@@ -35,6 +39,8 @@ def list_constraint(full_constraint, constraint_name):
 
     
     compound_result.append(constraint_name + str(constraint_count))
+
+
     
     resultant_constraint = constraint_name + str(constraint_count) + " = " + full_constraint[start:]
     result.append(resultant_constraint)
@@ -48,12 +54,14 @@ def list_constraint(full_constraint, constraint_name):
 
 
 
-
 def main():
 
+    global WRITER_LIMIT
 
     # reading filter output json file
-    df = pd.read_json("/home/vagrant/SPADE/tmp/hotel-1-cross-namespaces.json", lines=True)
+    df = pd.read_json("media-docker-workload-only.json", lines=True)
+
+    print("_____JSON file reading done_____")
 
     # loading static query template
     query_template = ""
@@ -61,6 +69,8 @@ def main():
     with open('./query_template', 'r') as f:
         lines = f.readlines()
         query_template = "".join(lines)
+    
+    print("_____Query template reading done_____")
 
     
     # Loading readers dfs for each entity into a dictionary 
@@ -69,8 +79,71 @@ def main():
     df_reader = pd.json_normalize(df['reader'])
     df_artifact = df_artifact.rename(columns={"boot_id": "entity_boot_id", "cf:machine_id": "entity_cf:machine_id", "object_id": "entity_object_id"})
 
-    df_artifact_reader = pd.concat([df_artifact, df_reader], axis=1)
-    df_artifact_reader
+    df_artifact_reader_writer = pd.concat([df_artifact, df_reader], axis=1)
+    df_artifact_reader_writer["writers"] = list(df["writers"])
+    # df_artifact_reader_writer["event-id"] = list(df["cross-namespace-event-id"])
+
+    print("_____Intial dataframe construction done_____")
+    print("\tNumber of rows:", df_artifact_reader_writer.shape[0])
+
+    print("_____Starting query construction_____")
+
+    for row in range(df_artifact_reader_writer.shape[0]):
+        
+        # Entity extraction
+        entity_tuple = (str(df_artifact_reader_writer.iloc[row]['entity_boot_id']), str(df_artifact_reader_writer.iloc[row]['entity_cf:machine_id']), str(df_artifact_reader_writer.iloc[row]['entity_object_id'] ))
+        entity_constraint = "%entity_constraint = \"boot_id\" == '" + entity_tuple[0] + "' and \"cf:machine_id\" == '" + entity_tuple[1]  + "' and \"object_id\" == '" + entity_tuple[2]  + "'\n"
+        cross_entities = "\n$crossnamespace_entities = $base.getVertex(%entity_constraint)\n\n"
+
+        # Reader extraction
+        reader_constraint, reader_compound_result_or, _ = list_constraint(" or ".join(["\"id\" == '" + df_artifact_reader_writer.iloc[row]['id'] + "'"]), "%reader_constraint")
+        cross_readers = "\n\n$crossnamespace_readers = $base.getVertex(" + reader_compound_result_or + ")\n\n"
+
+        # Writer extraction
+        writers = list(map(extract_id,df_artifact_reader_writer.iloc[0]['writers']))
+        number_of_writers = len(writers)
+        if number_of_writers > WRITER_LIMIT:
+            print("Entity with object_id: \"" + entity_tuple[2] + "\" is skipped due to " + str(number_of_writers) + " writers. Limit is set to: " + WRITER_LIMIT)
+            continue
+
+        writer_constraint, writer_compound_result_or, _ = list_constraint(" or ".join(writers), "%writer_constraint")
+        cross_writers = "\n\n$crossnamespace_writers = $base.getVertex(" + writer_compound_result_or + ")\n\n"        
+
+        # Export, dump, and reset
+        svg_name = "\n\nexport > /home/vagrant/transformed_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(row) + "_graph.json"
+        svg_dump = "\n\ndump all $transformed_subgraph"
+        reset_workspace = "\n\n########## Graph number: " + str(row) + " ##########\n\nreset workspace\n\n"
+
+
+        # Writing to query file
+        with open("individual_graph_query", 'a') as f:
+            f.write(reset_workspace)
+
+            f.write(entity_constraint)
+            f.write(cross_entities)
+
+            f.write(reader_constraint)
+            f.write(cross_readers)
+
+            f.write(writer_constraint)
+            f.write(cross_writers)
+
+            f.write(query_template)
+
+            f.write(svg_name)
+            f.write(svg_dump)
+
+    print("_____Query construction done_____")
+    print("_____Exiting_____")
+
+
+
+    # Old code for per entity graph generation
+    '''
+
+
+
+
     cols = ['entity_boot_id', 'entity_cf:machine_id', 'entity_object_id']
 
     df6 = df_artifact_reader.set_index(cols).sort_index()
@@ -163,6 +236,8 @@ def main():
 
             f.write(svg_name)
             f.write(svg_dump)
+
+    '''
 
 
 
