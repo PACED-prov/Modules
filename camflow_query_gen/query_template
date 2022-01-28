@@ -1,13 +1,13 @@
-# Group all process memory vertices which contain the namespace identifiers.
-$memorys = $base.getVertex(object_type = 'process_memory')
+# # Group all process memory vertices which contain the namespace identifiers.
+# $memorys = $base.getVertex(object_type = 'process_memory')
 # Group all task vertices which contain the process identifiers. Tasks are connected to process memory vertices.
-$tasks = $base.getVertex(object_type = 'task')
+# $tasks = $base.getVertex(object_type = 'task')
 # Group all files vertices which represent an inode. Tasks are connected to files by 'relation_type'='read' or 'relation_type'='write'.
-$files = $base.getVertex(object_type = 'file')
+# $files = $base.getVertex(object_type = 'file')
 # Group all path vertices which contain the path of an inode in the filesystem. Files are connected to paths.
-$paths = $base.getVertex(object_type = 'path')
+# $paths = $base.getVertex(object_type = 'path')
 # Group all argv vertices which contain the argument passed to a process.
-$argvs = $base.getVertex(object_type = 'argv')
+# $argvs = $base.getVertex(object_type = 'argv')
 
 # 4. Construct crossnamespace path
 $connected_entities = $base.getPath($crossnamespace_entities, $crossnamespace_entities, 1)
@@ -15,7 +15,8 @@ $crossnamespace_flow_0 = $base.getPath($crossnamespace_readers, $crossnamespace_
 $crossnamespace_flow_1 = $base.getPath($crossnamespace_entities, $crossnamespace_writers, 1)
 
 
-$crossnamespace_path_vertices = $base.getPath($crossnamespace_entities, $paths, 1) & $paths
+# NOTE 1: Not using '& $paths'. The following update would be less expensive w.r.t. time
+$crossnamespace_path_vertices = $base.getPath($crossnamespace_entities, $paths, 1).getVertex(object_type = 'path')
 $crossnamespace_path = $base.getPath($connected_entities, $crossnamespace_path_vertices, 1)
 
 
@@ -24,13 +25,17 @@ $crossnamespace_path = $base.getPath($connected_entities, $crossnamespace_path_v
 
 # 5. Adding process_memory vertices to writing and reading tasks.
 #
-$writing_process_memory = $base.getLineage($crossnamespace_writers, 1, 'a') & $memorys
-$reading_process_memory = $base.getLineage($crossnamespace_readers, 1, 'd') & $memorys
+# NOTE 2: The following two queries have been updated. The reason is the same as the one in NOTE 1
+$writing_process_memory = $base.getLineage($crossnamespace_writers, 1, 'a').getVertex(object_type = 'process_memory')
+$reading_process_memory = $base.getLineage($crossnamespace_readers, 1, 'd').getVertex(object_type = 'process_memory')
 $writing_task_to_writing_memory = $base.getPath($crossnamespace_writers, $writing_process_memory, 1)
 $reading_memory_to_reading_task = $base.getPath($reading_process_memory, $crossnamespace_readers, 1)
 
-$writing_process_memory_all_versions = $memorys.getMatch($writing_process_memory, 'object_id', 'cf:machine_id', 'boot_id')
-$reading_process_memory_all_versions = $memorys.getMatch($reading_process_memory, 'object_id', 'cf:machine_id', 'boot_id')
+# NOTE 3: Since 'getMatch' is an expensive query because SQL of table joins, the following is a rewrite which uses variables with less elements
+# NOTE 3: The variable '$all_process_memory_version_0' is being used for 'getMatch' because it has less elements than '$memorys'
+$all_process_memory_version_0 = $memorys.getVertex(version = '0')
+$writing_process_memory_all_versions = $all_process_memory_version_0.getMatch($writing_process_memory, 'object_id', 'cf:machine_id', 'boot_id')
+$reading_process_memory_all_versions = $all_process_memory_version_0.getMatch($reading_process_memory, 'object_id', 'cf:machine_id', 'boot_id')
 
 $writing_process_memory_path = $base.getPath($writing_process_memory_all_versions, $writing_process_memory_all_versions, 1, $paths, 1)
 $reading_process_memory_path = $base.getPath($reading_process_memory_all_versions, $reading_process_memory_all_versions, 1, $paths, 1)

@@ -104,6 +104,19 @@ def main():
             list_dfs_writers.append(dfx.reset_index())
 
 
+    with open("per_entity_media_docker_query", 'a') as f:
+        f.write("# Group all process memory vertices which contain the namespace identifiers.\n")
+        f.write("$memorys = $base.getVertex(object_type = 'process_memory')")
+
+        f.write("# Group all task vertices which contain the process identifiers. Tasks are connected to process memory vertices.")
+        f.write("$tasks = $base.getVertex(object_type = 'task')")
+
+        f.write("# Group all path vertices which contain the path of an inode in the filesystem. Files are connected to paths.")
+        f.write("$paths = $base.getVertex(object_type = 'path')")
+
+        f.write("# Group all argv vertices which contain the argument passed to a process.")
+        f.write("$argvs = $base.getVertex(object_type = 'argv')")
+
     counter = 0
     # constructing query for each entity in a single query file
     for df in list_dfs_writers:
@@ -147,9 +160,10 @@ def main():
         cross_readers = "\n\n$crossnamespace_readers = $base.getVertex(" + reader_compound_result_or + ")\n\n"
 
         # constructing output svg path, svg dump command, and reset workspace command
-        svg_name = "\n\nexport > /home/vagrant/transformed_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_graph.json"
+        svg_name = "\n\nexport > /home/vagrant/transformed_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
         svg_dump = "\n\ndump all $transformed_subgraph"
-        reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nreset workspace\n\n"
+        variables_to_erase = "$crossnamespace_entities $crossnamespace_writers $crossnamespace_readers $connected_entities $crossnamespace_flow_0 $crossnamespace_flow_1 $crossnamespace_path_vertices $crossnamespace_path $writing_process_memory $reading_process_memory $writing_task_to_writing_memory $reading_memory_to_reading_task $writing_process_memory_all_versions $reading_process_memory_all_versions $writing_process_memory_path $reading_process_memory_path $writing_process_to_argv $reading_process_to_argv $subgraph $transformed_subgraph"
+        reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nerase " + variables_to_erase + "\n\n"
 
 
         with open("per_entity_media_docker_query", 'a') as f:
