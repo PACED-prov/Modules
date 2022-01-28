@@ -53,7 +53,7 @@ def main():
 
 
     # reading filter output json file
-    df = pd.read_json("/home/vagrant/SPADE/tmp/hotel-1-cross-namespaces.json", lines=True)
+    df = pd.read_json("/home/vagrant/SPADE/tmp/media-docker-cross.json", lines=True)
 
     # loading static query template
     query_template = ""
@@ -120,20 +120,25 @@ def main():
         entity_tuple = (str(df.iloc[0]['entity_boot_id']), str(df.iloc[0]['entity_cf:machine_id']), str(df.iloc[0]['entity_object_id'] ))
         entity_constraint = "%entity_constraint = \"boot_id\" == '" + df.iloc[0]['entity_boot_id'] + "' and \"cf:machine_id\" == '" + df.iloc[0]['entity_cf:machine_id']  + "' and \"object_id\" == '" + df.iloc[0]['entity_object_id']  + "'\n"
         cross_entities = "\n$crossnamespace_entities = $base.getVertex(%entity_constraint)\n\n"
+        
+        if df.shape[0] > 2500:
+            continue
 
         # constructing writer constraint
         df['combined'] = "\"id\" == '" + df['writer_id'] + "'"
-
+        
         writer_concat_string = ' or '.join(df['combined'])
         writer_constraint, writer_compound_result_or, _ = list_constraint(writer_concat_string, "%writer_constraint")
         cross_writers = "\n\n$crossnamespace_writers = $base.getVertex(" + writer_compound_result_or + ")\n\n"
 
         # constructing reader constraint
         reader_df = dict_dfs_readers[entity_tuple]
-        print(reader_df)
-        print("\n**********\n")
+        #print(reader_df)
+        #print("\n**********\n")
+        if reader_df.shape[0] > 2500:
+            continue
         reader_df['combined'] = "\"id\" == '" + reader_df['id'] + "'"
-        print(reader_df['combined'])
+        #print(reader_df['combined'])
 
         reader_concat_string = ' or '.join(reader_df['combined'])
         #print("\n**********\n")
@@ -147,7 +152,7 @@ def main():
         reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nreset workspace\n\n"
 
 
-        with open("individual_graph_query", 'a') as f:
+        with open("per_entity_media_docker_query", 'a') as f:
             f.write(reset_workspace)
 
             f.write(entity_constraint)
