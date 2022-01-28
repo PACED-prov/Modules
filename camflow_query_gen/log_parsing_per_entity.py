@@ -135,7 +135,7 @@ def main():
         cross_entities = "\n$crossnamespace_entities = $base.getVertex(%entity_constraint)\n\n"
         
         if df.shape[0] > 2500:
-            continue
+            df = df.head(2500)
 
         # constructing writer constraint
         df['combined'] = "\"id\" == '" + df['writer_id'] + "'"
@@ -149,7 +149,7 @@ def main():
         #print(reader_df)
         #print("\n**********\n")
         if reader_df.shape[0] > 2500:
-            continue
+            reader_df = reader_df.head(2500)
         reader_df['combined'] = "\"id\" == '" + reader_df['id'] + "'"
         #print(reader_df['combined'])
 
