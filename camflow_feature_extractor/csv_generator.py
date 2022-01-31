@@ -444,9 +444,9 @@ def main():
         
         FEATURES = FEATURES.append(data_point, ignore_index = True)
 
-        print(FEATURES)
-        print("********************************************************")
-
+        #print(FEATURES)
+        print("********** " + str(counter) + " JSON file(s) processed **********\n")
+        counter = counter+ 1
 
     FEATURES.to_csv("features.csv", index=False)
 

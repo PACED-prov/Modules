@@ -53,7 +53,7 @@ def main():
 
 
     # reading filter output json file
-    df = pd.read_json("/home/vagrant/SPADE/tmp/media-docker-cross.json", lines=True)
+    df = pd.read_json("/home/vagrant/camflow_json_files/social-network-cross.json", lines=True)
 
     # loading static query template
     query_template = ""
@@ -104,18 +104,18 @@ def main():
             list_dfs_writers.append(dfx.reset_index())
 
 
-    with open("per_entity_media_docker_query", 'a') as f:
+    with open("per_entity_social_network_query", 'a') as f:
         f.write("# Group all process memory vertices which contain the namespace identifiers.\n")
-        f.write("$memorys = $base.getVertex(object_type = 'process_memory')")
+        f.write("$memorys = $base.getVertex(object_type = 'process_memory')\n")
 
-        f.write("# Group all task vertices which contain the process identifiers. Tasks are connected to process memory vertices.")
-        f.write("$tasks = $base.getVertex(object_type = 'task')")
+        f.write("# Group all task vertices which contain the process identifiers. Tasks are connected to process memory vertices.\n")
+        f.write("$tasks = $base.getVertex(object_type = 'task')\n")
 
-        f.write("# Group all path vertices which contain the path of an inode in the filesystem. Files are connected to paths.")
-        f.write("$paths = $base.getVertex(object_type = 'path')")
+        f.write("# Group all path vertices which contain the path of an inode in the filesystem. Files are connected to paths.\n")
+        f.write("$paths = $base.getVertex(object_type = 'path')\n")
 
-        f.write("# Group all argv vertices which contain the argument passed to a process.")
-        f.write("$argvs = $base.getVertex(object_type = 'argv')")
+        f.write("# Group all argv vertices which contain the argument passed to a process.\n")
+        f.write("$argvs = $base.getVertex(object_type = 'argv')\n\n")
 
     counter = 0
     # constructing query for each entity in a single query file
@@ -134,8 +134,8 @@ def main():
         entity_constraint = "%entity_constraint = \"boot_id\" == '" + df.iloc[0]['entity_boot_id'] + "' and \"cf:machine_id\" == '" + df.iloc[0]['entity_cf:machine_id']  + "' and \"object_id\" == '" + df.iloc[0]['entity_object_id']  + "'\n"
         cross_entities = "\n$crossnamespace_entities = $base.getVertex(%entity_constraint)\n\n"
         
-        if df.shape[0] > 2500:
-            df = df.head(2500)
+        if df.shape[0] > 500:
+            df = df.head(500)
 
         # constructing writer constraint
         df['combined'] = "\"id\" == '" + df['writer_id'] + "'"
@@ -148,8 +148,8 @@ def main():
         reader_df = dict_dfs_readers[entity_tuple]
         #print(reader_df)
         #print("\n**********\n")
-        if reader_df.shape[0] > 2500:
-            reader_df = reader_df.head(2500)
+        if reader_df.shape[0] > 500:
+            reader_df = reader_df.head(500)
         reader_df['combined'] = "\"id\" == '" + reader_df['id'] + "'"
         #print(reader_df['combined'])
 
@@ -166,7 +166,7 @@ def main():
         reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nerase " + variables_to_erase + "\n\n"
 
 
-        with open("per_entity_media_docker_query", 'a') as f:
+        with open("per_entity_social_network_query", 'a') as f:
             f.write(reset_workspace)
 
             f.write(entity_constraint)
