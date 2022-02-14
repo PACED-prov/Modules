@@ -7,7 +7,7 @@ import os
 # global vars
 EDGES = []
 VERTICES = []
-HEADER = ["object_type", "entity_path", "reader_path", "writer_path", "namespaces", "reader_relation_types", "writer_relation_types", "writer_argvs", "reader_argvs"]
+HEADER = ["object_type", "entity_path", "reader_path", "writer_path", "namespaces", "reader_relation_types", "writer_relation_types", "writer_argvs", "reader_argvs", "priviledged_flow"]
 FEATURES = pd.DataFrame(columns=HEADER)
 '''
 HEADER:
@@ -22,6 +22,7 @@ HEADER:
     * center entity is the object on which the crossnamespace event is happening. There is only one center entity per json file.
 '''
 CENTER_ENTITY = None
+HOST_IPCNS = None
 
 # Adds center entity json obj to global variable
 def set_center_entity(filepath):
@@ -239,7 +240,67 @@ def extract_namespaces():
 
     return one_hot
 
+def extract_priviledge_flow():
+    global VERTICES, EDGES, CENTER_ENTITY, HOST_IPCNS
 
+    #contains a list of the tuples of namespaces
+    reader_ns = (set(), set(), set(), set(), set())
+    writer_ns = (set(), set(), set(), set(), set())
+
+    # Getting ids of reading processes - type == Used
+    ids_from_type_used = []
+    # Getting ids of writing processes - type == WasGeneratedBy
+    ids_to_type_WGB = []
+
+    for e in EDGES:
+        # conditions
+        to_center_entity = e["to"] == CENTER_ENTITY["id"]
+
+        edge_type_used = e["type"] == "Used"
+
+        if to_center_entity and edge_type_used:
+            ids_from_type_used.append(e["from"])
+
+        from_center_entity = e["from"] == CENTER_ENTITY["id"]
+
+        edge_type_WGB = e["type"] == "WasGeneratedBy"
+
+        if from_center_entity and edge_type_WGB:
+            ids_to_type_WGB.append(e["to"])
+
+    for v in VERTICES:
+        for id in ids_from_type_used:
+            if (v['id'] == id):
+                r_ns = (v['annotations']['ipcns'], v['annotations']['mntns'], v['annotations']['netns'], v['annotations']['pidns'], v['annotations']['utsns'])
+
+                for i in range (5):
+                    reader_ns[i].add(r_ns[i])
+
+        for id in ids_to_type_WGB:
+            if (v['id'] == id):
+                w_ns = (v['annotations']['ipcns'], v['annotations']['mntns'], v['annotations']['netns'], v['annotations']['pidns'], v['annotations']['utsns'])
+
+                for i in range (5):
+                        writer_ns[i].add(w_ns[i])
+
+    check_writer_container = False
+    check_reader_host = False
+
+    for ns in writer_ns[0]:
+        if ns != HOST_IPCNS:
+            check_writer_container = True
+
+    for ns in reader_ns[0]:
+        if ns == HOST_IPCNS:
+            check_reader_host = True
+
+    priviledged_flow = 0
+
+    if check_reader_host and check_writer_container:
+        priviledged_flow = 1
+    
+
+    return priviledged_flow
 
 
 # Returns the relation types of the readers of the the center entity
@@ -408,14 +469,17 @@ def load_data(filepath):
     print("Done")
 
 
-def main():
-    global EDGES, VERTICES, FEATURES
+def main(filepath, host_ipcns):
+    global EDGES, VERTICES, FEATURES, HOST_IPCNS
+
+    HOST_IPCNS = host_ipcns
 
     files = []
 
-    with open("filenames.txt", "r") as f:
+    with open(filepath, "r") as f:
         files = f.readlines()
 
+    counter = 1
     for file in files:
         load_data(file.strip())
 
@@ -430,6 +494,7 @@ def main():
         writer_relation_types = extract_writer_relation_types()
         writer_argvs = extract_writer_argvs()
         reader_argvs = extract_reader_argvs()
+        priviledged_flow = extract_priviledge_flow()
 
         data_point = {HEADER[0]: object_type, 
                     HEADER[1]: entity_path, 
@@ -439,7 +504,8 @@ def main():
                     HEADER[5]: reader_relation_types, 
                     HEADER[6]: writer_relation_types,
                     HEADER[7]: writer_argvs,
-                    HEADER[8]: reader_argvs
+                    HEADER[8]: reader_argvs,
+                    HEADER[9]: priviledged_flow
                     }
         
         FEATURES = FEATURES.append(data_point, ignore_index = True)
@@ -453,8 +519,14 @@ def main():
 
 if __name__ == '__main__':
     try:
-        print("Starting...")
-        main()
+        if len(sys.argv) != 3:
+            raise Exception("run python3 csv_generator.py <filepath> <host_ipcns>")
+        else:
+            print("Starting...")
+            print("Filepath:", sys.argv[1])
+            print("Host IPCNS:", sys.argv[2])
+            main(sys.argv[1], sys.argv[2])
+        
     except KeyboardInterrupt:
         print("Exiting...")
         try:
