@@ -50,6 +50,4 @@ $reading_process_to_argv = $base.getPath($reading_process_memory_all_versions, $
 #
 $subgraph = $crossnamespace_flow_0 + $crossnamespace_flow_1 + $connected_entities + $crossnamespace_path + $writing_task_to_writing_memory + $reading_memory_to_reading_task + $writing_process_memory_path + $reading_process_memory_path + $writing_process_to_argv + $reading_process_to_argv
 $subgraph = $subgraph.collapseEdge('relation_type')
-
-$transformed_subgraph = $subgraph.transform(MergeVertex,"boot_id,cf:machine_id,object_id,pidns,ipcns,mntns,netns,cgroupns,utsns")
-$transformed_subgraph = $transformed_subgraph.collapseEdge('relation_type')
+$transformed_subgraph = $subgraph
