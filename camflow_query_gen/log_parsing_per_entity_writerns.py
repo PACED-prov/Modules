@@ -124,17 +124,20 @@ def main():
 
     ##
     with open("per_entity_social_network_query", 'a') as f:
+        f.write("# Creating a new $base2 with dropped duplicate vertices and repeated edges w.r.t. relation_type\n")
+        f.write("$base2 = $base.collapseEdge('relation_type')\n")
+
         f.write("# Group all process memory vertices which contain the namespace identifiers.\n")
-        f.write("$memorys = $base.getVertex(object_type = 'process_memory')\n")
+        f.write("$memorys = $base2.getVertex(object_type = 'process_memory')\n")
 
         f.write("# Group all task vertices which contain the process identifiers. Tasks are connected to process memory vertices.\n")
-        f.write("$tasks = $base.getVertex(object_type = 'task')\n")
+        f.write("$tasks = $base2.getVertex(object_type = 'task')\n")
 
         f.write("# Group all path vertices which contain the path of an inode in the filesystem. Files are connected to paths.\n")
-        f.write("$paths = $base.getVertex(object_type = 'path')\n")
+        f.write("$paths = $base2.getVertex(object_type = 'path')\n")
 
         f.write("# Group all argv vertices which contain the argument passed to a process.\n")
-        f.write("$argvs = $base.getVertex(object_type = 'argv')\n\n")
+        f.write("$argvs = $base2.getVertex(object_type = 'argv')\n\n")
 
     counter = 0
     # constructing query for each entity in a single query file
@@ -150,7 +153,7 @@ def main():
         # print(df.iloc[0]['entity_object_id'])
         entity_tuple = (str(df.iloc[0]['entity_boot_id']), str(df.iloc[0]['entity_cf:machine_id']), str(df.iloc[0]['entity_object_id'] ))
         entity_constraint = "%entity_constraint = \"boot_id\" == '" + df.iloc[0]['entity_boot_id'] + "' and \"cf:machine_id\" == '" + df.iloc[0]['entity_cf:machine_id']  + "' and \"object_id\" == '" + df.iloc[0]['entity_object_id']  + "'\n"
-        cross_entities = "\n$crossnamespace_entities = $base.getVertex(%entity_constraint)\n\n"
+        cross_entities = "\n$crossnamespace_entities = $base2.getVertex(%entity_constraint)\n\n"
         
         if df.shape[0] > 500:
             df = df.head(500)
@@ -160,12 +163,12 @@ def main():
         
         # writer_concat_string = ' or '.join(df['combined'])
         # writer_constraint, writer_compound_result_or, _ = list_constraint(writer_concat_string, "%writer_constraint")
-        # cross_writers = "\n\n$crossnamespace_writers = $base.getVertex(" + writer_compound_result_or + ")\n\n"
+        # cross_writers = "\n\n$crossnamespace_writers = $base2.getVertex(" + writer_compound_result_or + ")\n\n"
         new_writer_constraint = new_writer_constraints[counter-1]
         writer_constraint, writer_compound_result_or, _ = list_constraint(new_writer_constraint, "%writer_constraint")
-        all_writers = "\n\n$all_writers = $base.getVertex(" + writer_compound_result_or + ")\n\n"
+        all_writers = "\n\n$all_writers = $base2.getVertex(" + writer_compound_result_or + ")\n\n"
 
-        cross_writers = "\n$crossnamespace_writers = $base.getPath($crossnamespace_entities, $all_writers, 1).getVertex(object_type = 'task')\n"
+        cross_writers = "\n$crossnamespace_writers = $base2.getPath($crossnamespace_entities, $all_writers, 1).getVertex(object_type = 'task')\n"
         
         # constructing reader constraint
         reader_df = dict_dfs_readers[entity_tuple]
@@ -180,12 +183,12 @@ def main():
         #print("\n**********\n")
         #print(reader_concat_string)
         reader_constraint, reader_compound_result_or, _ = list_constraint(reader_concat_string, "%reader_constraint")
-        cross_readers = "\n\n$crossnamespace_readers = $base.getVertex(" + reader_compound_result_or + ")\n\n"
+        cross_readers = "\n\n$crossnamespace_readers = $base2.getVertex(" + reader_compound_result_or + ")\n\n"
 
         # constructing output svg path, svg dump command, and reset workspace command
-        svg_name = "\n\nexport > /home/vagrant/transformed_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
-        svg_dump = "\n\ndump all $transformed_subgraph"
-        variables_to_erase = "$crossnamespace_entities $crossnamespace_writers $crossnamespace_readers $connected_entities $crossnamespace_flow_0 $crossnamespace_flow_1 $crossnamespace_path_vertices $crossnamespace_path $writing_process_memory $reading_process_memory $writing_task_to_writing_memory $reading_memory_to_reading_task $writing_process_memory_all_versions $reading_process_memory_all_versions $writing_process_memory_path $reading_process_memory_path $writing_process_to_argv $reading_process_to_argv $subgraph $transformed_subgraph"
+        svg_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
+        svg_dump = "\n\ndump all $subgraph"
+        variables_to_erase = "$crossnamespace_entities $crossnamespace_writers $all_writers $crossnamespace_readers $connected_entities $crossnamespace_flow_0 $crossnamespace_flow_1 $crossnamespace_path_vertices $crossnamespace_path $writing_process_memory $reading_process_memory $writing_task_to_writing_memory $reading_memory_to_reading_task $writing_process_memory_all_versions $reading_process_memory_all_versions $writing_process_memory_path $reading_process_memory_path $writing_process_to_argv $reading_process_to_argv $subgraph $transformed_subgraph"
         reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nerase " + variables_to_erase + "\n\n"
 
 
