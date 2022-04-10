@@ -307,7 +307,7 @@ def extract_priviledge_flow():
     reader_pod_ns = set()
 
     # Only a write from VM 
-    if (len(writer_ns[0]) == 1) and (writer_ns[0][0] == VM_IPCNS):
+    if (len(writer_ns[0]) == 1) and (VM_IPCNS in writer_ns[0]):
         priviledged_flow = 0
     else:
         for ns in writer_ns[0]:
@@ -576,7 +576,7 @@ def main(filepath):
 
 if __name__ == '__main__':
     try:
-        if len(sys.argv) != 3:
+        if len(sys.argv) != 2:
             raise Exception("run python3 csv_generator.py <filepath>")
         else:
             print("Starting...")
