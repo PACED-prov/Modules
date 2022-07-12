@@ -53,12 +53,12 @@ def main():
 
 
     # reading filter output json file
-    df = pd.read_json("./hotel-kube-cross.json", lines=True)
+    df = pd.read_json("./hotel-dropkeys-cross.json", lines=True)
 
     # loading static query template
     query_template = ""
 
-    with open('./query_template', 'r') as f:
+    with open('./query_template_dropkeys', 'r') as f:
         lines = f.readlines()
         query_template = "".join(lines)
 
@@ -112,18 +112,32 @@ def main():
     new_writer_constraints = []
     for i in list_writers_ns_set:
         if len(i) == 1:
-            cnst = " and ". join(i[0])
+            dummy = list(i[0])
+            dummy[0] = "\"cgroupns\" = '" + dummy[0] + "'"
+            dummy[1] = "\"mntns\" = '" + dummy[1] + "'"
+            dummy[2] = "\"pidns\" = '" + dummy[2] + "'"
+            dummy[3] = "\"ipcns\" = '" + dummy[3] + "'"
+            dummy[4] = "\"utsns\" = '" + dummy[4] + "'"
+            dummy[5] = "\"netns\" = '" + dummy[5] + "'"
+            cnst = " and ". join(dummy)
         else:
             temp = []
             for j in i:
-                temp_str = " and ". join(j)
+                dummy = list(j)
+                dummy[0] = "\"cgroupns\" = '" + dummy[0] + "'"
+                dummy[1] = "\"mntns\" = '" + dummy[1] + "'"
+                dummy[2] = "\"pidns\" = '" + dummy[2] + "'"
+                dummy[3] = "\"ipcns\" = '" + dummy[3] + "'"
+                dummy[4] = "\"utsns\" = '" + dummy[4] + "'"
+                dummy[5] = "\"netns\" = '" + dummy[5] + "'"
+                temp_str = " and ". join(dummy)
                 temp_str = "(" + temp_str + ")"
                 temp.append(temp_str)
             cnst = " or ". join(temp)
         new_writer_constraints.append(cnst)
 
     ##
-    with open("per_entity_social_network_query", 'a') as f:
+    with open("per_entity_hotel_kube_query", 'a') as f:
         f.write("# Creating a new $base2 with dropped duplicate vertices and repeated edges w.r.t. relation_type\n")
         f.write("$base2 = $base.collapseEdge('relation_type')\n")
 
@@ -186,13 +200,14 @@ def main():
         cross_readers = "\n\n$crossnamespace_readers = $base2.getVertex(" + reader_compound_result_or + ")\n\n"
 
         # constructing output svg path, svg dump command, and reset workspace command
-        svg_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
-        svg_dump = "\n\ndump all $subgraph"
+        dot_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.dot"
+        json_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
+        subgraph_dump = "\n\ndump all $subgraph"
         variables_to_erase = "$crossnamespace_entities $crossnamespace_writers $all_writers $crossnamespace_readers $connected_entities $crossnamespace_flow_0 $crossnamespace_flow_1 $crossnamespace_path_vertices $crossnamespace_path $writing_process_memory $reading_process_memory $writing_task_to_writing_memory $reading_memory_to_reading_task $writing_process_memory_all_versions $reading_process_memory_all_versions $writing_process_memory_path $reading_process_memory_path $writing_process_to_argv $reading_process_to_argv $subgraph $transformed_subgraph"
         reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nerase " + variables_to_erase + "\n\n"
 
 
-        with open("per_entity_social_network_query", 'a') as f:
+        with open("per_entity_hotel_kube_query", 'a') as f:
             f.write(reset_workspace)
 
             f.write(entity_constraint)
@@ -206,8 +221,11 @@ def main():
 
             f.write(query_template)
 
-            f.write(svg_name)
-            f.write(svg_dump)
+            f.write(dot_name)
+            f.write(subgraph_dump)
+
+            f.write(json_name)
+            f.write(subgraph_dump)
 
 
 
