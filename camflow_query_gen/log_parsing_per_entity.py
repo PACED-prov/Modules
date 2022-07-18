@@ -166,7 +166,7 @@ def main():
         # constructing output svg path, svg dump command, and reset workspace command
         dot_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.dot"
         json_name = "\n\nexport > /home/vagrant/output_graph/" + entity_tuple[0] + "_" + entity_tuple[1][3:] + "_" + entity_tuple[2] + "_" + str(counter) + "_graph.json"
-        subgraph_dump = "\n\ndump all $subgraph"
+        subgraph_dump = "\n\ndump all $transformed_subgraph"
         variables_to_erase = "$crossnamespace_entities $crossnamespace_writers $crossnamespace_readers $connected_entities $crossnamespace_flow_0 $crossnamespace_flow_1 $crossnamespace_path_vertices $crossnamespace_path $writing_process_memory $reading_process_memory $writing_task_to_writing_memory $reading_memory_to_reading_task $writing_process_memory_all_versions $reading_process_memory_all_versions $writing_process_memory_path $reading_process_memory_path $writing_process_to_argv $reading_process_to_argv $subgraph $transformed_subgraph"
         reset_workspace = "\n\n########## Graph number: " + str(counter) + " ##########\n\nerase " + variables_to_erase + "\n\n"
 
