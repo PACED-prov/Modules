@@ -384,7 +384,10 @@ def extract_writer_argvs():
     # Getting values of argvs
     for v in VERTICES:
         if v["id"] in ids_of_argv_vertices:
-            argvs.append(v["annotations"]["value"])
+            try:
+                argvs.append(v["annotations"]["value"])
+            except:
+                pass
 
     # In case of central entity being process memory, it is possible that the path of writers is same as central entity
     # if paths == []:
@@ -437,7 +440,10 @@ def extract_reader_argvs():
     # Getting pathnames
     for v in VERTICES:
         if v["id"] in ids_of_argv_vertices:
-            argvs.append(v["annotations"]["value"])
+            try:
+                argvs.append(v["annotations"]["value"])
+            except:
+                pass
 
     # # In case of central entity being process memory, it is possible that the path of writers is same as central entity
     # if paths == []:
