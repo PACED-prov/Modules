@@ -503,7 +503,7 @@ def main(filepath, host_ipcns, cns_json_path):
 
     HOST_IPCNS = host_ipcns
 
-    calculate_entity_counts()
+    calculate_entity_counts(cns_json_path)
 
     files = []
 
