@@ -516,6 +516,7 @@ def main(filepath, host_ipcns, cns_json_path):
 
         set_center_entity(file.strip())
 
+
         object_type = extract_object_type()
         entity_path = extract_entity_path()
         reader_path = extract_reader_path()
@@ -526,7 +527,7 @@ def main(filepath, host_ipcns, cns_json_path):
         writer_argvs = extract_writer_argvs()
         reader_argvs = extract_reader_argvs()
         priviledged_flow = extract_priviledge_flow()
-        bID_mID_oID = extract_identifier(filepath)
+        bID_mID_oID = extract_identifier(file)
         cns_event_count = extract_cns_event_count(bID_mID_oID)
 
         data_point = {HEADER[0]: bID_mID_oID,
