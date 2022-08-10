@@ -13,6 +13,12 @@ import os
  @When should you use it?
     This Python module will help you mark the malicious entities with high
     accuracy that are involved in a container escape exploit.
+
+@Kubernetes policies
+    To distinguish the types
+    of privileged flows, we define the following two policies:
+        • Policy 1: Ban low to critical level flows and inter pod flows
+        • Policy 2: Ban only low to critical level flows
  
  @authors 
     Shahpar Khan, Mashal Abbas
@@ -55,7 +61,7 @@ def extract_priviledge_flow_kubernetes():
 
     check_inter_pod_flows = False
 
-    if POLICY_NUMBER == "2":
+    if POLICY_NUMBER == "1":
         print("Checking for inter pod flows...")
         check_inter_pod_flows = True
 
