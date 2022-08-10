@@ -19,7 +19,8 @@ import os
     you create an iterative SPADE query for each entity that you can load into
     SPADE query client using the following command: load <query_file_path>
  
- @authors Shahpar Khan, Mashal Abbas
+ @authors 
+    Shahpar Khan, Mashal Abbas
  --------------------------------------------------------------------------------
 '''
 

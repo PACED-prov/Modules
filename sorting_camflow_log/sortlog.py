@@ -15,7 +15,8 @@ import os
     before the edge of that vertex is encountered in a log then this Python 
     module can help you bring your CamFlow log in a desired shape. 
  
- @authors Shahpar Khan, Mashal Abbas
+ @authors 
+    Shahpar Khan, Mashal Abbas
  --------------------------------------------------------------------------------
 '''
 

@@ -3,7 +3,23 @@ import json
 import sys
 import os
 
-# global vars
+'''
+ --------------------------------------------------------------------------------
+ @What it does?
+    The following Python module is designed to ingest a SPADE entity flow graph
+    in a JSON format and output the priviledged flow flag based on the 
+    the container engine (Docker or Kubernetes)
+ 
+ @When should you use it?
+    This Python module will help you mark the malicious entities with high
+    accuracy that are involved in a container escape exploit.
+ 
+ @authors 
+    Shahpar Khan, Mashal Abbas
+ --------------------------------------------------------------------------------
+'''
+
+# Global variables
 EDGES = []
 VERTICES = []
 HEADER = ["bID_mID_oID", "priviledged_flow"]
@@ -32,6 +48,8 @@ def set_center_entity(filepath):
         if v["annotations"]["boot_id"] == ids[0] and v["annotations"]["cf:machine_id"] == ids[1] and v["annotations"]["object_id"] == ids[2]:
             CENTER_ENTITY = v
 
+
+# Function to extract priviledged_flow for kubernetes environment
 def extract_priviledge_flow_kubernetes():
     global VERTICES, EDGES, CENTER_ENTITY, HOST_IPCNS, CLUSTER_IPCNS, POLICY_NUMBER
 
@@ -145,6 +163,8 @@ def extract_priviledge_flow_kubernetes():
 
     return priviledged_flow
 
+
+# Function to extract priviledged_flow for docker environment
 def extract_priviledge_flow_docker():
     global VERTICES, EDGES, CENTER_ENTITY, HOST_IPCNS
 
@@ -206,6 +226,7 @@ def extract_priviledge_flow_docker():
     return priviledged_flow
 
 
+# Function to load a graph in a JSON format and store its vertices and edges globally
 def load_data(filepath):
     global EDGES, VERTICES
     
@@ -225,7 +246,7 @@ def load_data(filepath):
                 VERTICES.append(obj)
 
 
-
+# Function to extract the identifier <boot_id>_<cf:machine_id>_<object_id>
 def extract_identifier():
     global CENTER_ENTITY
 
@@ -264,7 +285,7 @@ def main(filepath, extract_priviledge_flow, host_ipcns, cluster_ipcns = None, po
         print("********** " + str(counter) + " JSON file(s) processed **********\n")
         counter = counter+ 1
 
-    FEATURES.to_csv("test_features.csv", index=False)
+    FEATURES.to_csv("features.csv", index=False)
 
 
 if __name__ == '__main__':
