@@ -8,7 +8,7 @@ import os
  @What it does?
     The following Python module is designed to ingest a CamFlow log and sort it
     in a way that all vertices are piled up at the top followed by all the edges
-    in a sequenctial order based on their 'relation_id'.
+    sorted in a sequential order based on their 'relation_id'. 
  
  @When should you use it?
     If there is a strict need in a module that requires a vertex to be present
@@ -20,7 +20,7 @@ import os
 '''
 
 
-# Function that returns True if the current JSON object is a vertex --- False if it is an Edge
+# Function that returns True if the current JSON object is a vertex --- False if it is an edge
 def isVertex(obj):
 
     if (obj["type"] == "Entity") or (obj["type"] == "Activity"):
@@ -35,7 +35,8 @@ def extractRelationID(obj):
     try:
         return int(obj["annotations"]["relation_id"])
     except:
-        pass
+        print("Error in reading relation_id of the following JSON object:")
+        print(obj)
 
     return None
 
@@ -56,7 +57,7 @@ def readWriteLog(input_log_path, output_log_name):
         input_file = open(input_log_path, 'r')
     except:
         print("Error in opening file at path:", input_log_path)
-        
+
     try:
         output_file = open(output_log_name, "a")
     except:
@@ -84,16 +85,6 @@ def readWriteLog(input_log_path, output_log_name):
 
     output_file.close()
     input_file.close()
-
-
-def checkFromAnnot(obj):
-    try:
-        if obj["from"]:
-            return True
-    except:
-        pass
-
-    return False
 
 
 def main(input_log_path, output_log_name):
