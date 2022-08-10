@@ -52,8 +52,15 @@ def dumpPriorityQueue(pq, output_file):
 def readWriteLog(input_log_path, output_log_name):
 
     # Opening files
-    output_file = open(output_log_name, "a")
-    input_file = open(input_log_path, 'r')
+    try:
+        input_file = open(input_log_path, 'r')
+    except:
+        print("Error in opening file at path:", input_log_path)
+        
+    try:
+        output_file = open(output_log_name, "a")
+    except:
+        print("Error in opening file with name:", output_log_name) 
     
     # Initializing priority queue
     pq = PriorityQueue()
