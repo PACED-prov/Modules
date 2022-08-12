@@ -4,8 +4,10 @@ This repository contains all the necessary modules to filter, transform, query, 
 
 <br>
 
-| Category           | Name                        | Purpose                                                                                    |
-|--------------------|-----------------------------|--------------------------------------------------------------------------------------------|
-| Preprocessing      | sortlog_camflow.py          | Sorts camflow based on relation ids so that SPADE's CrossNamespaces filter can ingested it |
-| Querying           | EFGquerygenertor_spade.py   | Generates a SPADE query script that builds EFGs                                            |
-| Feature Extraction | extractor_privilegedflow.py | Extracts privileged_flow feature for anomaly detection                                     |
+| Category           | Name                        | Purpose                                                                                                       |
+|--------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
+| Preprocessing      | sortlog_camflow.py          | Sorts camflow based on relation ids so that SPADE's CrossNamespaces filter can ingested it                    |
+| Preprocessing      | DropKeys.java               | SPADE filter&mdash;A modified implementation of SPADE's DropKeys filter that removes graph object annotations |
+| Querying           | EFGquerygenertor_spade.py   | Generates a SPADE query script that builds EFGs                                                               |
+| Transforming       | MergeVertex.java            | SPADE transformer&mdash;A transformer that merges vertices based on an annotation                             |
+| Feature Extraction | extractor_privilegedflow.py | Extracts privileged_flow feature for anomaly detection                                                        |
