@@ -1,7 +1,0 @@
-
-
-$paths = $base.getPath($crossnamespace_readers, $crossnamespace_artifacts, 1) + $base.getPath($crossnamespace_artifacts, $crossnamespace_writers, 1)
-$paths = $paths.collapseEdge('type')
-$subgraph = $paths.transform(MergeVertex,"inode")
-
-
